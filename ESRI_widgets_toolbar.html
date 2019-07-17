@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head>
+	<!-- These are pre-processing scripts and sources -->
+	<link rel="stylesheet" href="http://js.arcgis.com/3.27/dijit/themes/claro/claro.css">
+	<link rel="stylesheet" href="http://js.arcgis.com/3.27/esri/css/esri.css">
+	<script src="http://js.arcgis.com/3.27/" type="text/javascript"></script>
+
+	<!-- This is the main script -->
+    <script type="text/javascript">
+		var theMap, measurement, PhotoLayer, parcelsLayer, parcelNum, drawToolbar;
+
+		require(["dojo/dom", "dojo/on",
+		"esri/map",
+		"esri/SpatialReference",
+		"esri/dijit/Measurement", "esri/units",
+		"esri/layers/FeatureLayer",
+		"esri/geometry/Extent",
+		"esri/dijit/Search",
+		"esri/toolbars/draw",
+		"esri/graphic",
+		"esri/symbols/SimpleMarkerSymbol",
+		"esri/symbols/SimpleLineSymbol",
+		"esri/symbols/SimpleFillSymbol"],
+		function MapAction(dom, on, Map, SpatialReference, Measurement, Units, FeatureLayer, Extent, Search, Draw, Graphic,
+		SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol)
+		{
+			// These items set the geographic start-up extent
+			var spatialRef = new SpatialReference({ wkid: 102100 }); // Web Mercator
+			var startExtent = new Extent();
+			startExtent.xmin = -10531500;
+			startExtent.xmax = -10523700;
+			startExtent.ymin = 4733100;
+			startExtent.ymax = 4737700;
+			startExtent.spatialReference = spatialRef;
+
+			// Create the map object and initialize it with the start-up extent, with ESRI streets base map
+			theMap = new Map("mapdiv", { extent: startExtent, basemap: "streets" });
+			
+			// when the map fires up this will inititialize the draw toolbar
+			theMap.on("load", initDrawTool);
+
+			// Create an instance of a parcels layer and add it to the streets map.
+			parcelsLayer = new FeatureLayer("https://jcgis.jacksongov.org/arcgis/rest/services/Cadastral/TaxParcels_WGS/MapServer/0");
+			theMap.addLayer(parcelsLayer);
+
+			// ----- function for measurement tool -------- //
+			measurement = new Measurement({
+				map: theMap,
+				defaultAreaUnit: Units.SQUARE_FEET,
+				defaultLengthUnit: Units.FEET
+				}, dom.byId("measurementDiv"));
+			measurement.startup();
+
+			// -------- function for search tool ------------ //
+			var SearchPID = new Search({
+				sources: [{
+					featureLayer: parcelsLayer,
+					outFields: ["Parcel_ID"],
+					displayField: "Parcel_ID",
+					suggestionTemplate: "${Parcel_ID}",
+					name: "Parcel Num",
+					placeholder: "00-000-00-00-00-0-00-000",
+					enableSuggestions: false // it only loads 5 suggestions (which are always the same 5) so don't bother enabling this
+			     }],
+			 map: theMap
+			}, "searchDiv");
+			SearchPID.startup();
+			
+			// ----------- functions for draw tool --------------- //
+			
+			function initDrawTool()
+			{
+				drawToolbar = new Draw(theMap);
+				drawToolbar.on("draw-complete", addGraphic); // addGraphic saves the graphic on the map when drawing is finished
+
+				on(dom.byId("drawDiv"), "click", function(evt) {
+				if ( evt.target.id === "drawDiv" ) {
+				  return;
+				}
+				var tool = evt.target.id.toLowerCase();
+				theMap.disableMapNavigation(); // you want to disable map navigation while you're clicking on the map to draw
+				drawToolbar.activate(tool);
+				});
+			}
+			function addGraphic(evt) // addGraphic saves the graphic on the map when drawing is finished
+			{
+				  //deactivate the toolbar and resume navigation abilities
+				  drawToolbar.deactivate(); 
+				  theMap.enableMapNavigation();
+
+				  // choose the geometry type to save on the map
+				  switch (evt.geometry.type)
+				  {
+					case "point":
+					case "multipoint":
+						symbol = new SimpleMarkerSymbol(); // just using default symbols
+						break;
+					case "polyline":
+						symbol = new SimpleLineSymbol(); // just using default symbols
+						break;
+					default:
+						symbol = new SimpleFillSymbol(); // just using default symbols
+						break;
+				  }
+				  var graphic = new Graphic(evt.geometry, symbol);
+				  theMap.graphics.add(graphic);
+			}
+			// -------- end of functions for draw tools ------------ //
+			
+		} // end of MapAction function
+		); // end of require
+
+		// used for measure tool
+		function clearresults()
+		{
+			measurement.clearResult();
+			measurement.setTool(measurement.activeTool, false);
+			handler.resume();
+		}
+		// used to clear all draw tool graphics
+		function cleargraphics()
+		{
+			theMap.graphics.clear();
+		}
+    </script>
+	
+	<style type="text/css">
+		#mapdiv {
+			width: 1000px;
+			height: 500px;
+			top: 20px;
+			position: absolute;
+			left: 20px;
+			border: 5px solid #bbb;
+		}
+		#toolSidebarDiv {
+			width: 250px;
+			top: 20px;
+			position: absolute;
+			left: 1050px;
+			background-color: #F5F5F5;
+			padding: 1%;
+			border: 1px solid #bbb;
+		}
+		#measurementDiv {
+			border: 1px solid black;
+			background-color: #FAFAFA;
+			padding-top: 2%;
+			padding-bottom: 2%;
+			padding-left: 2%;
+		}
+		#searchDiv {
+			border: 1px solid black;
+			background-color: #FAFAFA;
+			padding-top: 2%;
+			padding-bottom: 2%;
+			padding-left: 2%;
+		}
+		#drawDiv {
+			border: 1px solid black;
+			background-color: #FAFAFA;
+			padding-top: 2%;
+			padding-bottom: 2%;
+			padding-left: 2%;
+		}
+		/* these next two override ESRI default dimensions */
+		.arcgisSearch .searchGroup .searchInput {
+			height: 20px;
+			width: 150px;
+		}
+		.arcgisSearch .searchBtn {
+			height: 20px;
+			width: 20px;
+		}
+	</style>	
+</head>
+
+<body>
+	<!-- the map -->
+	<div id="mapdiv"></div>
+	<!-- the basemap toggle sidebar -->
+	<div id="toolSidebarDiv">
+			<b>Measurement Tools</b>
+			<div id="measurementDiv"></div>
+			<input type="button" onclick="clearresults()" value="Clear Results" />
+			<br><br>
+			<b>Search by Parcel #</b>
+			<div id="searchDiv"></div>
+			<br>
+			<b>Draw Tools</b>
+			<div id="drawDiv"><button id="Point">Point</button><button id="Multipoint">Multipoint</button><button id="Polyline">Line</button><button id="Polygon">Polygon</button>
+							<button id="FreehandPolyline">Freehand Line</button><button id="FreehandPolygon">Freehand Polygon</button>
+							<button id="Circle">Circle</button><button id="Rectangle">Rectangle</button><button id="Triangle">Triangle</button><br>
+			</div>
+			<div align="center"><button id="cleargraphics" onclick="cleargraphics()">Clear Graphics</button></div>
+		</div>
+</body>
+</html>
+
