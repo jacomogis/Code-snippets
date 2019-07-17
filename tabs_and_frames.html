@@ -1,0 +1,105 @@
+<html>
+<head>
+ <title>Five Midwest Cities</title>
+ <meta charset="utf-8" />
+
+ <style>
+      #Header {
+       width: 100%;
+       height: 40px;
+       background-color: antiquewhite;
+       text-align: center;
+       font-size: xx-large;
+       position: absolute;
+       color: black;
+      }
+
+      body {
+       font-family: "Lato", sans-serif;
+      }
+
+      div.tab {
+       width: 100%;
+       top: 49px;
+       position: absolute;
+       overflow: hidden;
+       background-color: burlywood;
+      }
+
+      div.tab button {
+       background-color: burlywood;
+       float: left;
+       border: none;
+       outline: none;
+       cursor: pointer;
+       padding: 12px 40px;
+       transition: 0.3s;
+       font-size: 20px;
+      }
+
+      div.tab button:hover {
+       background-color: #ddd;
+      }
+
+      div.tab button.active {
+       background-color: #ccc;
+      }
+
+     .tabcontent {
+      display: none;
+      border-top: none;
+      top: 100px;
+      position: absolute;
+      width: 100%;
+      height: 80%;
+     }
+ </style>
+</head>
+
+<body>
+ <div id="Header"><b>FIVE MIDWEST CITIES</b></div>
+ <div class="tab">
+  <button class="tablinks" onclick="openTab(event, 'Kansas City')" id="defaultOpen">Kansas City</button>
+  <button class="tablinks" onclick="openTab(event, 'Cinncinati')">Cincinnati</button>
+  <button class="tablinks" onclick="openTab(event, 'Chicago')">Chicago</button>
+  <button class="tablinks" onclick="openTab(event, 'Milwaukee')">Milwaukee</button>
+  <button class="tablinks" onclick="openTab(event, 'St Louis')">St Louis</button>
+ </div>
+  <div id="Kansas City" class="tabcontent">
+  <iframe src="http://jacksoncomo.maps.arcgis.com/apps/webappviewer/index.html?id=19d0c3fbbfac42a1bc35bad9be238c53" width="100%" height="100%" frameborder="0" style="border:0" allowfullscreen="false"></iframe>
+ </div>
+ <div id="Cinncinati" class="tabcontent">
+  <iframe src="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d49519.03423736198!2d-84.51187255668523!3d39.130604970638835!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1500583417168" width="100%" height="100%" frameborder="0" style="border:0" allowfullscreen></iframe>
+ </div>
+ <div id="Chicago" class="tabcontent">
+  <iframe src="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d95070.31666876787!2d-87.70514572336673!3d41.87247822832939!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1500583510958" width="100%" height="100%" frameborder="0" style="border:0" allowfullscreen></iframe>
+ </div>
+ <div id="Milwaukee" class="tabcontent">
+  <iframe src="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d46664.292940923566!2d-87.944216413317!3d43.03052507131341!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1500583582926" width="100%" height="100%" frameborder="0" style="border:0" allowfullscreen></iframe>
+ </div>
+ <div id="St Louis" class="tabcontent">
+  <iframe src="https://www.google.com/maps/embed?pb=!1m10!1m8!1m3!1d83862.25669847301!2d-90.25157335965852!3d38.63623766027791!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sus!4v1500583657150" width="100%" height="100%" frameborder="0" style="border:0" allowfullscreen></iframe>
+ </div>
+
+ <!-- This HAS to go at the bottom of the body -->
+ <script>
+        function openTab(evt, tabName)
+        {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        document.getElementById("defaultOpen").click();
+ </script>
+</body>
+</html>
+
+
