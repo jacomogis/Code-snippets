@@ -1,0 +1,132 @@
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head>
+	<!-- These are pre-processing scripts and sources -->
+	<link rel="stylesheet" href="http://js.arcgis.com/3.27/esri/css/esri.css">
+	<script src="http://js.arcgis.com/3.27/" type="text/javascript"></script>
+
+	<!-- This is the main script -->
+	<script type = "text/javascript">
+		
+		var theMap, parcelLayer;
+
+		require(["esri/map", "esri/SpatialReference", "esri/layers/FeatureLayer", "esri/geometry/Extent"],
+		function MapAction(Map, SpatialReference, FeatureLayer, Extent)
+		{         
+			// These items set the geographic start-up extent.
+			var spatialRef = new SpatialReference({ wkid: 102100 }); // Web Mercator - but data is in State Plane, though it still works
+			var startExtent = new Extent();
+			startExtent.xmin = -10529599;
+			startExtent.xmax = -10529324;
+			startExtent.ymin = 4736481;
+			startExtent.ymax = 4736756;
+			startExtent.spatialReference = spatialRef;
+
+			// Create the map object and initialize it with the start-up extent in the map division html part
+			theMap = new Map("mapdiv", { extent: startExtent, basemap: "streets"});
+
+			// Add the parcel layer
+			parcelLayer = new FeatureLayer("https://jcgis.jacksongov.org/arcgis/rest/services/Cadastral/TaxParcels_WGS/MapServer/0", { id: "1", outFields: ["*"] }); // tax parcels Web Mercator
+			theMap.addLayer(parcelLayer);
+
+		} // end of MapAction function
+		); // end of require
+		
+		function MapOnOff()
+		{
+			var x = document.getElementById("mapdiv");
+			if (x.style.display === "none")
+				x.style.display = "block";
+			else
+				x.style.display = "none";
+		}
+	</script>
+
+	<style>
+		#mapdiv {
+			width: 1000px;
+			height: 500px;
+			top: 20px;
+			position: absolute;
+			left: 20px;
+			border: 5px solid #bbb;
+			resize: both;
+			overflow: auto;
+		}
+		#mapdivheader {
+			padding: 10px;
+			cursor: move;
+			z-index: 10;
+			background-color: #2196F3;
+			color: #fff;
+		}
+		#mapToggleDiv {
+			width: 180px;
+			height: 20px;
+			top: 20px;
+			float: right;
+			background-color: #F5F5F5;
+			padding: 2%;
+			border: 1px solid #bbb;
+		}
+	</style>
+</head>
+
+<body>
+	<!-- the actual map, with header for dragging -->
+	<div id="mapdiv">
+		<div id="mapdivheader">Click and drag to move map</div>
+	</div>
+	<!-- the map toggle on/off sidebar -->
+	<div id="mapToggleDiv">
+		<button onclick="MapOnOff()">Click to toggle map on/off</button>
+	</div>
+
+	<!-- This script HAS to go in the body of the html -->
+	<script>
+	//Make the DIV element draggagle:
+	dragElement(document.getElementById("mapdiv"));
+
+		function dragElement(elmnt)
+		{
+			if (document.getElementById(elmnt.id + "header"))
+			{
+				document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+			}
+
+			function dragMouseDown(e)
+			{
+				e = e || window.event;
+				e.preventDefault();
+				// get the mouse cursor position at startup:
+				pos3 = e.clientX;
+				pos4 = e.clientY;
+				document.onmouseup = closeDragElement;
+				// call a function whenever the cursor moves:
+				document.onmousemove = elementDrag;
+			}
+
+			function elementDrag(e)
+			{
+				e = e || window.event;
+				e.preventDefault();
+				// calculate the new cursor position:
+				pos1 = pos3 - e.clientX;
+				pos2 = pos4 - e.clientY;
+				pos3 = e.clientX;
+				pos4 = e.clientY;
+				// set the element's new position:
+				elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+				elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+			}
+
+			function closeDragElement()
+			{
+				/* stop moving when mouse button is released:*/
+				document.onmouseup = null;
+				document.onmousemove = null;
+			}
+	}
+	</script>
+
+</body>
+</html>
