@@ -1,0 +1,74 @@
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head>
+	<!-- These are pre-processing scripts and sources -->
+	<link rel="stylesheet" href="https://js.arcgis.com/3.27/esri/css/esri.css">
+	<script src="https://js.arcgis.com/3.27/" type="text/javascript"></script>
+
+	<!-- This is the main script -->
+    <script>
+		// declare global variables
+        var parcelsLayer1, parcelsLayer2, photoLayer, StreetMap, PhotoMap;
+
+        require(["esri/map", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/geometry/Extent"],
+            function MapAction(Map, FeatureLayer, Tiled, Extent)
+            {
+				// Any web map must use Web Mercator
+				var spatialRef = new esri.SpatialReference({ wkid: 3857 }); // wkid:3857 is WGS_1984_Web_Mercator_Auxiliary_Sphere
+                var startExtent = new Extent();
+
+                // Depending on what you're doing, start extent might really be extracted from some selected parcel,
+				//		and passed in through the URL or some other means ... this is just a placeholder
+				// Again, start extent coordinates are in WGS_1984_Web_Mercator_Auxiliary_Sphere
+                startExtent.xmin = -10529599;
+                startExtent.xmax = -10529324;
+                startExtent.ymin = 4736481;
+                startExtent.ymax = 4736756;
+				startExtent.spatialReference = spatialRef;
+				
+				// Create the two map instances:
+				//	1. Street map will use ESRI "streets" map as a basemap with our parcels added on top
+				//	2. Photo map will use our own aerial photo as the basemap with our parcels added on top
+				StreetMap = new Map("StreetMap", { extent: startExtent, basemap: "streets" });
+                PhotoMap = new Map("PhotoMap", { extent: startExtent });
+
+                // Create an instance of a parcels layer and add it to the streets map.
+                parcelsLayer1 = new FeatureLayer("https://jcgis.jacksongov.org/arcgis/rest/services/Cadastral/TaxParcels_WGS/MapServer/0");
+                StreetMap.addLayer(parcelsLayer1);
+				
+				// You cannot use the same instance of the parcels layer for both embedded maps - you need to create a new instance for each map
+				// Then just add both our photo layer and our parcels layer to the map
+				photoLayer = new Tiled("https://jcgis.jacksongov.org/arcgis/rest/services/Imagery/HybridOrthos2018/MapServer");
+                parcelsLayer2 = new FeatureLayer("https://jcgis.jacksongov.org/arcgis/rest/services/Cadastral/TaxParcels_WGS/MapServer/0");
+				PhotoMap.addLayer(photoLayer);
+				PhotoMap.addLayer(parcelsLayer2);
+				
+            } // end of function
+        ); // end of require
+    </script>
+	
+	<style>
+		#StreetMap {
+			width: 450px;
+			height: 350px;
+			top: 20px;
+			position: absolute;
+			left: 100px;
+			border: 1px solid #bbb;
+		}
+		#PhotoMap {
+			width: 450px;
+			height: 350px;
+			top: 20px;
+			position: absolute;
+			left: 650px;
+			border: 1px solid #bbb;
+		}
+	</style>
+</head>
+
+<body>
+	<div id="StreetMap"></div>
+    <div id="PhotoMap"></div>
+</body>
+</html>
+
