@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+
+<html xmlns="https://www.w3.org/1999/xhtml">
+<head>	
+	<!-- These are pre-processing scripts and sources -->
+	<link rel="stylesheet" href="http://js.arcgis.com/3.27/esri/css/esri.css">
+	<script src="http://js.arcgis.com/3.27/" type="text/javascript"></script>
+
+	<!-- This is the main script -->
+    <script type = "text/javascript">
+		
+		// Declare global variables. These are variables used both in the require function and in the executeIdentifyTask and ToggleBaseMaps functions
+		var theMap, photoLayer, parcelLayer, parcelNum, identifyTask, identifyParams;
+
+		require(["esri/map",
+		"esri/SpatialReference",
+		"esri/layers/FeatureLayer",
+		"esri/layers/ArcGISTiledMapServiceLayer",
+		"esri/geometry/Extent",
+		"esri/InfoTemplate",
+		"esri/tasks/IdentifyTask",
+		"esri/tasks/IdentifyParameters",
+		"esri/dijit/InfoWindow",
+		"dojo/on"],
+		function MapAction(Map, SpatialReference, FeatureLayer, Tiled, Extent, InfoTemplate, IdentifyTask, IdentifyParameters, InfoWindow, on)
+		{         
+			// These items set the geographic start-up extent
+			var spatialRef = new SpatialReference({ wkid: 102100 }); // Web Mercator - but data is in State Plane, though it still works
+			var startExtent = new Extent();
+			startExtent.xmin = -10529599;
+			startExtent.xmax = -10529324;
+			startExtent.ymin = 4736481;
+			startExtent.ymax = 4736756;
+			startExtent.spatialReference = spatialRef;
+
+			// Create the map object and initialize it with the start-up extent in the map division html part
+			theMap = new Map("mapdiv", { extent: startExtent, basemap: "streets"});
+
+			// Add the photo layer (first, which will be at the bottom) then the parcels layer (which will be at the top).
+			// Make the photo layer not visible by default, so that the streets base map layer is the default
+			photoLayer = new Tiled("https://jcgis.jacksongov.org/arcgis/rest/services/Imagery/HybridOrthos2016/MapServer", { id: 'A'});
+			theMap.addLayer(photoLayer);
+			photoLayer.setVisibility(false);
+			parcelLayer = new FeatureLayer("https://jcgis.jacksongov.org/arcgis/rest/services/Cadastral/TaxParcels_WGS/MapServer/0", { id: "1", outFields: ["*"] }); // tax parcels Web Mercator
+			theMap.addLayer(parcelLayer);
+
+			// Click handler for identify task - user clicks with mouse pointer.
+			var handler = on(theMap, "click", executeIdentifyTask);
+
+			// Now set up the identify task
+			identifyTask = new IdentifyTask("https://jcgis.jacksongov.org/arcgis/rest/services/Cadastral/TaxParcels_WGS/MapServer"); // point it to the Web Mercator tax parcels layer (same as above)
+
+			// Parameters for identify task
+			identifyParams = new IdentifyParameters();
+			identifyParams.tolerance = 3; // search radius
+			identifyParams.returnGeometry = true; // returns geometry
+			identifyParams.layerIds = [0]; // test parcels layer is the zeroth layer (that is, it's the first (and only) one)
+			identifyParams.layerOption = IdentifyParameters.LAYER_OPTION_VISIBLE;
+			identifyParams.width = theMap.width; // identity extent set to map width
+			identifyParams.height = theMap.height; // indentity extent set to map height
+
+		} // end of MapAction function
+		); // end of require
+
+		// Handler for identify tool
+		//-------------------------------
+		function executeIdentifyTask(evt)
+		{
+			identifyParams.geometry = evt.mapPoint;
+			identifyParams.mapExtent = theMap.extent;
+			var executeIDtask = identifyTask.execute(identifyParams);
+
+			executeIDtask.addCallback(function (response) {
+				var ParcelTemplate = new esri.InfoTemplate("Parcel Number:<br/><b>${Parcel_ID}</b>", "Address:<br/><b>${SitusAddress}</b><br/><b>${SitusCity}</b><br/>Owner:<br/><b>${owner}</b><br/><br/><input type='button' value='Click for Property Info' id='infoButton' onClick=OpenPropertyReport()></button>");
+			
+				return dojo.map(response, function (result) // dojo.map is a built-in property of dojo, not the html mapdiv or theMap instance
+				{
+					var feature = result.feature;
+					feature.attributes.layerName = result.layerName;
+
+					if (result.layerName == 'Tax Parcels') // Web Mercator test layer
+					{	
+						parcelNum = feature.attributes.Parcel_ID; // this grabs the parcel # from the parcels map service
+						feature.setInfoTemplate(ParcelTemplate); // creates the info template (popup) using the features you just grabbed from the parcel
+					}
+					return feature;
+				} // end of function (result)
+							); // end of return dojo.map
+			}); // end of executeIDtask.addCallback
+			theMap.infoWindow.setFeatures([executeIDtask]); // sets the features to the info window
+			theMap.infoWindow.show(evt.mapPoint); // actually shows the completed info window
+		}
+
+		// Function to toggle base maps
+		//-----------------------------------------------
+		function ToggleBasemaps(id)
+		{
+			if (id=='A') // if user clicked on the aerial photo
+				photoLayer.setVisibility(true);
+			else // if user clicked on the street map
+				photoLayer.setVisibility(false);
+		}
+
+		// Function called when button on popup is clicked
+		//-----------------------------------------------
+		function OpenPropertyReport()
+		{
+			window.open("https://jcgis.jacksongov.org/propertyreport/PropertyReport.aspx?pid=" + parcelNum);
+		}
+		
+    </script>
+	
+	<style>
+		#mapdiv {
+			width: 1000px;
+			height: 500px;
+			top: 20px;
+			position: absolute;
+			left: 20px;
+			border: 5px solid #bbb;
+		}
+		#basemapToggleDiv {
+			width: 200px;
+			height: 150px;
+			top: 20px;
+			position: absolute;
+			left: 1050px;
+			background-color: #F5F5F5;
+			padding: 2%;
+			border: 1px solid #bbb;
+		}
+
+	</style>
+</head>
+
+<body>
+	<!-- the map -->
+	<div id="mapdiv"></div>
+	<!-- the basemap toggle sidebar -->
+	<div id="basemapToggleDiv">
+		<b>Select base map</b>
+		<hr />
+		<table>
+			<tr>
+				<td align="center" style="width:50%"><img src="https://js.arcgis.com/3.15/esri/images/basemap/satellite.jpg" onclick="ToggleBasemaps('A')" /><br />Aerial photo</td>
+				<td align="center" style="width:50%"><img src="https://js.arcgis.com/3.15/esri/images/basemap/streets.jpg" onclick="ToggleBasemaps('B')" /><br />Street map</td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>
+
