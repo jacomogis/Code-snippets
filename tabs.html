@@ -1,0 +1,95 @@
+<html>
+<head>
+	<style>
+	body {
+		margin: 0px;
+	}
+	#Header {
+		position: absolute;
+		width: 100%;
+		height: 5%;
+		background-color: burlywood;
+		text-align: center;
+		font-size: x-large;
+		color: black;
+    }
+    div.tab {
+		position: absolute;
+		width: 100%;
+		top: 5%;
+		height: 5%;
+		overflow: hidden;
+		background-color: burlywood;
+		outline: none;
+		border: none;
+    }
+    div.tab button {
+		float: left;
+		height: 100%;
+		cursor: pointer;
+		padding: 6px 30px;
+		transition: 0.3s;
+		font-size: 20px;
+		outline: none;
+		border: none;
+    }
+    div.tab button:hover {
+		outline: none;
+		border: none;
+    }
+    div.tab button.active {
+		outline: none;
+		border: none;
+    }
+    .tabcontent {
+		position: absolute;
+		width: 96%;
+		height: 86%;
+		top: 10%;
+		font-size: 20px;
+		display: none;
+		outline: none;
+		padding-left: 2%;
+		padding-top: 2%;
+		padding-right: 2%;
+    }
+	</style>
+</head>
+
+<body>
+	<div id="Header"><b>THREE TABS</b></div>
+	<div class="tab">
+		<button style="background-color:#EBDEF0;" onclick="openTab(event, 'First')" id="defaultOpen">First</button>
+		<button style="background-color:#FFA07A;" onclick="openTab(event, 'Second')">Second</button>
+		<button style="background-color:#D1F2EB;" onclick="openTab(event, 'Third')">Third</button>
+	</div>
+	<div id="First" class="tabcontent" style="background-color:#EBDEF0; text-align: left;">
+		Some stuff in the first
+	</div>
+	<div id="Second" class="tabcontent" style="background-color:#FFA07A; text-align: center;">
+		Some more stuff in the second
+	</div>
+	<div id="Third" class="tabcontent" style="background-color:#D1F2EB; text-align: right;">
+		Still more stuff in the third
+	</div>
+	
+ <!-- This HAS to go at the bottom of the body -->
+ <script>
+        function openTab(evt, tabName)
+        {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        document.getElementById("defaultOpen").click();
+ </script>
+</body>
+</html>
