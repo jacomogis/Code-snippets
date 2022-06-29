@@ -1,0 +1,109 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+<title>FeatureTable widget | Sample | ArcGIS API for JavaScript 4.23</title>
+
+<link rel="stylesheet" href="https://js.arcgis.com/4.23/esri/themes/light/main.css"/>
+<script src="https://js.arcgis.com/4.23/"></script>
+
+<style>
+	html, body {
+		height: 100%;
+		width: 100%;
+		margin: 0;
+		padding: 0;
+	}
+	.container {
+		height: 100%;
+		width: 100%;
+	}
+</style>
+
+<script type="text/javascript">
+	require(["esri/layers/FeatureLayer", "esri/widgets/FeatureTable"], ( FeatureLayer, FeatureTable ) => {
+		const featureLayer = new FeatureLayer({
+			//url: "https://services3.arcgis.com/4LOAHoFXfea6Y3Et/arcgis/rest/services/GIS_Onboarding_Request_Form_3_Pub/FeatureServer",
+			url: "https://services3.arcgis.com/4LOAHoFXfea6Y3Et/arcgis/rest/services/Appeals_Hearing_Dashboard_2022_Board_Edition_Viewer/FeatureServer",
+			title: "BoE 2022 Data Download"
+		});
+		// create the FeatureTable from the provided FeatureLayer
+		const featureTable = new FeatureTable({
+			layer: featureLayer,
+			multiSortEnabled: true,
+			visibleElements:
+			{
+				selectionColumn: false,
+				showAllColumns: true,
+				menu: true,
+				menuItems:
+				{
+					clearSelection: true,
+					refreshData: true,
+					toggleColumns: true,
+					selectedRecordsShowAllToggle: true,
+					selectedRecordsShowSelectedToggle: true,
+					showAllColumns: true,
+					zoomToSelection: true
+				}
+			},
+			container: document.getElementById("tableDiv")
+		}); // end of featureTable
+	}); // end of require
+
+	function tableToCSV()
+	{
+		var csv_data = [];
+
+		var cellcount = document.getElementsByTagName("vaadin-grid-cell-content").length;
+		var colcount = document.getElementsByClassName("esri-field-column__header-content").length;
+
+		for (var i = 0; i < cellcount; i++)
+		{
+			var temp = document.getElementsByTagName("vaadin-grid-cell-content")[i].innerText;
+			var cell = temp.replace(/,/g, " ");
+			
+			if(i % colcount == 0)
+			{
+				csv_data.push('\n');
+			}
+			if( cell == "( ) -")
+			{
+				csv_data.push("");
+			}
+			else
+			{
+				csv_data.push(cell);
+			}
+		}
+		downloadCSVFile(csv_data);
+	}
+	
+	function downloadCSVFile(csv)
+	{
+		CSVFile = new Blob([csv], {
+			type: "text/csv"
+		});
+
+		var temp_link = document.createElement("a");
+
+		temp_link.download = "BoEdata2022.csv";
+		var url = window.URL.createObjectURL(CSVFile);
+		temp_link.href = url;
+
+		temp_link.style.display = "none";
+		document.body.appendChild(temp_link);
+
+		temp_link.click();
+		document.body.removeChild(temp_link);
+	}
+</script>
+</head>
+
+<body>
+	<div class="container">
+		<button onclick="tableToCSV()">Download CSV</button>
+		<div id="tableDiv"></div>
+	</div>
+</body>
+</html>
